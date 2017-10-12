@@ -1,12 +1,8 @@
----
-title: "When Is An Imperfect Test Useful?"
-date: "March 22, 2017"
-author: "Song S. Qian"
-output: pdf_document
-bibliography: "~/Dropbox/LaTeX/maintxt.bib"
----
+# When Is An Imperfect Test Useful?
+### March 22, 2017
+## Song S. Qian
 
-# Initial Setup
+## Initial Setup
 
 In the hidden R code chunk, I load (and install, if not already installed) needed packages and set up working directory.  The working directory should have a sub-folder named `Data` for raw data file(s) and a folder named `Figures` for exporting figures.  
 ```{r, echo=F, message=FALSE}
@@ -57,7 +53,7 @@ These two equations are similar and we discuss equation \eqref{eq:pos} in detail
 
 In equation \ref{eq:pos}, $\Pr(+|p) = 1-\Pr(-|p)$ is the power of the test (equals 1 minus false negative probability) and $\Pr(+|a)$ is the false positive probability.  In order to calculate the quantity of interest ($\Pr(p|+)$), we also need to know $\Pr(p)$ (and $\Pr(a)= 1-\Pr(p)$), the prevalence of the gene in the population.  This is often the quantity we want to learn, for example, from the results of testing individual animals for the presence of a disease gene.  In other words, we test individual animals in order to learn about the prevalence of the disease; but we need to know the prevalence of the disease in order to properly interpret the test result.  
 
-# When Population Prevalence is Known
+## When Population Prevalence is Known
 
 When we know $\Pr(p)$ for a given population, we are interested in identify individuals with the disease.  In this situation, we want to evaluate whether the test is useful -- defined by the posterior probability $\Pr(p|+)$.  If $\Pr(p|+) \leq 0.5$, the test provides no information.  That is, for a test to be useful, we need to have:
 \begin{equation}
@@ -94,7 +90,7 @@ legend(x=0.1, y=0.25, lty=1, col=c("black", "red","blue"), legend=c("$\\gamma=1$
 The acceptable combination of $\Pr(+|a)$ and $\Pr(-|p)$ is in the area below each of the lines.   
 When the prevalence of the disease (gene, ...) is low (in this example, 0.1), a positive result is useful only when the false positive rate is very low and false negative rate is not too high.  In other words, to make a positive result useful when the prevalence of the disease is low, we can accept a test with a reasonable false negative probability, as long as the false positive probability is very low.  In fact, if the false positive rate is 0, a positive result is always a definite indicator of the presence of the disease.
 
-# When Population Prevalence is Unknown
+## When Population Prevalence is Unknown
 When $\Pr(p)$ is unknown, the nature of the problem changed.  Instead of focusing on the individual tested, we are now interested in estimating the prevalence based on testing results.  We discuss the estimation problem in two steps.  First, let's assume that the test is perfect (i.e., $\Pr(+|a) = \Pr(-|p) = 0$).  A perfect test suggests that $\Pr(p|+) = 1$.  That is, we can treat a positive result as a definite confirmation of presence of the agent of interest.  If a number of subjects are tested, the data we have is the number of presences and the number of absences.  Given the unknown prevalence, we naturally model the data using the binomial model. Let the number of positive results be $y$, and the total number of tests be $n$.  The binomial model is
 $$
 y \sim Bin(\theta, n)
