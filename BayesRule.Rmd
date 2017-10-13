@@ -1,8 +1,12 @@
-# When Is An Imperfect Test Useful?
-### March 22, 2017
-## Song S. Qian
+---
+title: "When Is An Imperfect Test Useful?"
+date: "March 22, 2017"
+author: "Song S. Qian"
+output: pdf_document
+bibliography: "~/Dropbox/LaTeX/maintxt.bib"
+---
 
-## Initial Setup
+# Initial Setup
 
 In the hidden R code chunk, I load (and install, if not already installed) needed packages and set up working directory.  The working directory should have a sub-folder named `Data` for raw data file(s) and a folder named `Figures` for exporting figures.  
 ```{r, echo=F, message=FALSE}
@@ -53,7 +57,7 @@ These two equations are similar and we discuss equation \eqref{eq:pos} in detail
 
 In equation \ref{eq:pos}, $\Pr(+|p) = 1-\Pr(-|p)$ is the power of the test (equals 1 minus false negative probability) and $\Pr(+|a)$ is the false positive probability.  In order to calculate the quantity of interest ($\Pr(p|+)$), we also need to know $\Pr(p)$ (and $\Pr(a)= 1-\Pr(p)$), the prevalence of the gene in the population.  This is often the quantity we want to learn, for example, from the results of testing individual animals for the presence of a disease gene.  In other words, we test individual animals in order to learn about the prevalence of the disease; but we need to know the prevalence of the disease in order to properly interpret the test result.  
 
-## When Population Prevalence is Known
+# When Population Prevalence is Known
 
 When we know $\Pr(p)$ for a given population, we are interested in identify individuals with the disease.  In this situation, we want to evaluate whether the test is useful -- defined by the posterior probability $\Pr(p|+)$.  If $\Pr(p|+) \leq 0.5$, the test provides no information.  That is, for a test to be useful, we need to have:
 \begin{equation}
@@ -90,7 +94,7 @@ legend(x=0.1, y=0.25, lty=1, col=c("black", "red","blue"), legend=c("$\\gamma=1$
 The acceptable combination of $\Pr(+|a)$ and $\Pr(-|p)$ is in the area below each of the lines.   
 When the prevalence of the disease (gene, ...) is low (in this example, 0.1), a positive result is useful only when the false positive rate is very low and false negative rate is not too high.  In other words, to make a positive result useful when the prevalence of the disease is low, we can accept a test with a reasonable false negative probability, as long as the false positive probability is very low.  In fact, if the false positive rate is 0, a positive result is always a definite indicator of the presence of the disease.
 
-## When Population Prevalence is Unknown
+# When Population Prevalence is Unknown
 When $\Pr(p)$ is unknown, the nature of the problem changed.  Instead of focusing on the individual tested, we are now interested in estimating the prevalence based on testing results.  We discuss the estimation problem in two steps.  First, let's assume that the test is perfect (i.e., $\Pr(+|a) = \Pr(-|p) = 0$).  A perfect test suggests that $\Pr(p|+) = 1$.  That is, we can treat a positive result as a definite confirmation of presence of the agent of interest.  If a number of subjects are tested, the data we have is the number of presences and the number of absences.  Given the unknown prevalence, we naturally model the data using the binomial model. Let the number of positive results be $y$, and the total number of tests be $n$.  The binomial model is
 $$
 y \sim Bin(\theta, n)
@@ -139,20 +143,31 @@ If we use the same prior for $\theta$, the posterior is now a far more complicat
 It is not obvious to us whether this posterior distribution can be represented by one of the commonly used statistical probability distributions.  However, we can numerically approximate the density function by evaluating the term in the right-hand-side of equation \eqref{eq:post1} over a grid of $\theta$ (between 0 and 1) if $f_n$ and $f_p$ are known.
 
 ```{r, fig.width=4, fig.align="center", fig.height=3.75, tidy=TRUE, message=FALSE}
-postTheta<- function(y = 5,n = 20,fn = 0.05, fp = 0.02, alpha= 2, beta= 18, theta= seq(0.0, 0.6, 0.001)){
+postTheta<- function(y = 5,n = 20,fn = 0.05, fp = 0.02, alpha= 2, beta= 18, theta= seq(0.0, 0.6, 0.001), bw=F){
 post <- (theta^(alpha-1))*((1-theta)^(beta-1))*((theta*(1-fn)+(1-theta)*fp)^y)*((1-theta*(1-fn)-(1-theta)*fp)^(n-y))
 post <- post/(sum(post*0.001))
 par(mar=c(3,3,1,0.5), mgp=c(1.25,0.125,0), las=1, tck=0.01)
 plot(theta, post, type="l", ylim=c(0, max(dbeta(theta, alpha, beta), post)), 
      xlab="$\\theta$", ylab="$\\pi(\\theta|y)$")
-curve(dbeta(x, alpha,beta), add=T, lty=2, col="red")
-abline(v=y/n, lty=3, col="blue")
+if (bw){
+  curve(dbeta(x, alpha,beta), add=T, lty=2)
+  abline(v=y/n, lty=3)
+  } else{ 
+    curve(dbeta(x, alpha,beta), add=T, lty=2, col="red")
+    abline(v=y/n, lty=3, col="blue")
+}
 invisible(cbind(theta, post))
 }
 ## Figure 2
 tikz(file=paste(plotDIR, "BayesTest2.tex", sep="/"), height=3, width=4.5, standAlone = F)
 output <- postTheta()
 legend(x=0.35, y=6.5, col=c("red","black","blue"), lty=c(2,1,3), legend = c("prior", "posterior","data"), 
+       bty="n")
+dev.off()
+
+tikz(file=paste(plotDIR, "BayesTest2BW.tex", sep="/"), height=3, width=4.5, standAlone = F)
+output <- postTheta(bw=T)
+legend(x=0.35, y=6.5, lty=c(2,1,3), legend = c("prior", "posterior","data"), 
        bty="n")
 dev.off()
 ```
@@ -225,14 +240,77 @@ postTheta2D<- function(y = 5,n = 20,fn = 0.05, fp = seq(0, 0.2, 0.001), alpha= 2
   theta_fp <- expand.grid(theta, fp)
   thetaG <- theta_fp[,1]
   fpG <- theta_fp[,2]
-  post <- matrix((fpG^(ap-1))*((1-fpG)^(bp-1))*(thetaG^(alpha-1))*((1-thetaG)^(beta-1))*((thetaG*(1-fn)+(1-thetaG)*fpG)^y)*((1-thetaG*(1-fn)-(1-thetaG)*fpG)^(n-y)), nrow=length(theta), ncol=length(fp)) 
+  post <- matrix(temp<-(fpG^(ap-1))*((1-fpG)^(bp-1))*(thetaG^(alpha-1))*((1-thetaG)^(beta-1))*((thetaG*(1-fn)+(1-thetaG)*fpG)^y)*((1-thetaG*(1-fn)-(1-thetaG)*fpG)^(n-y)), nrow=length(theta), ncol=length(fp)) 
 par(mar=c(3,3,1,0.5), mgp=c(1.25,0.125,0), tck=0.01)
 contour(theta, fp, post, xlab="$\\theta$", ylab="$f_p$", drawlabels = F, nlevels = 15)
-invisible()
+invisible(list(thetaG, fpG, temp, theta, fp, post))
 }
 ## Figure 3
 tikz(file=paste(plotDIR, "BayesTest2D.tex", sep="/"), height=3, width=4.5, standAlone = F)
-postTheta2D(fp=seq(0,0.07,0.001), theta=seq(0, 0.4,0.001))
+temp<-postTheta2D(fp=seq(0,0.07,0.001), theta=seq(0, 0.4,0.005))
+dev.off()
+data3D<-data.frame(theta=temp[[1]],fp=temp[[2]],post=temp[[3]])
+data3D$post <- data3D$post/sum(data3D$post*0.005*0.001) 
+
+
+panel.3d.contour <-
+  function(x, y, z, rot.mat, distance,
+           nlevels = 20, zlim.scaled, ...)
+  {
+    add.line <- trellis.par.get("add.line")
+    panel.3dwire(x, y, z, rot.mat, distance,
+                 zlim.scaled = zlim.scaled, ...)
+    clines <-
+      contourLines(x, y, matrix(z, nrow = length(x), byrow = TRUE),
+                   nlevels = nlevels)
+    for (ll in clines) {
+      m <- ltransform3dto3d(rbind(ll$x, ll$y, zlim.scaled[2]),
+                            rot.mat, distance)
+      panel.lines(m[1,], m[2,], col = add.line$col,
+                  lty = add.line$lty, lwd = add.line$lwd)
+    }
+  }
+
+##pdf(file=paste(plotDIR, "BayesTest3D.pdf", sep="/"), height=4, width=4.5)
+tikz(file=paste(plotDIR, "BayesTest3D.tex", sep="/"), height=4, width=4.5, standAlone = F)
+par.set <- standard.theme("pdf", color=TRUE)
+wireframe(post~theta*fp, data=data3D, shade=T,
+##  xlab = expression(theta), ylab = expression(f[p]),
+  xlab = "$\\theta$", ylab = "$f_p$",
+##  zlab = expression(pi(theta, f[p])),
+##  main = expression(paste("Joint distribution of ", theta, " and ", f[p], sep="")),
+##  main = "Joint distribution of $\\theta$ and $f_p$",
+  zlab = "$\\pi(\\theta, f_p)$",
+  panel.3d.wireframe="panel.3d.contour", nlevels=10,
+  screen = list(z = 30, x = -60), 
+  aspect=c(0.6, .65),
+  panel.aspect=0.75, scales=list(arrows=F, cex=0.6, tck=0.75, 
+                                 x=list(at=c(0,0.1,0.2,0.3,0.4)),
+                                 y=list(at=c(0.02,0.04,0.06)),
+                                 z=list(arrows=T)),
+  par.settings=par.set
+)
+dev.off()
+
+tikz(file=paste(plotDIR, "BayesTest3DBW.tex", sep="/"), height=4, width=4.5, standAlone = F)
+par.set <- standard.theme("tikz", color=F)
+wireframe(post~theta*fp, data=data3D, shade=T,
+##  xlab = expression(theta), ylab = expression(f[p]),
+  xlab = "$\\theta$", ylab = "$f_p$",
+##  zlab = expression(pi(theta, f[p])),
+##  main = expression(paste("Joint distribution of ", theta, " and ", f[p], sep="")),
+##  main = "Joint distribution of $\\theta$ and $f_p$",
+  zlab = "$\\pi(\\theta, f_p)$",
+  panel.3d.wireframe="panel.3d.contour", nlevels=10,
+  screen = list(z = 30, x = -60), 
+  aspect=c(0.6, .65),
+  panel.aspect=0.75, scales=list(arrows=F, cex=0.6, tck=0.75, 
+                                 x=list(at=c(0,0.1,0.2,0.3,0.4)),
+                                 y=list(at=c(0.02,0.04,0.06)),
+                                 z=list(arrows=T)),
+par.settings=par.set
+)
+
 dev.off()
 ```
 
@@ -337,7 +415,7 @@ yinyang2 <- function(col1=rgb(0.,0.,0.,1), col2=rgb(1,1,1,1), col3=rgb(0.5,0.5,0
     polygon(x=c(-arc1, arc2, arc3), y=c(rev(ax1), -ax1, rev(-ax1), ax1), density=-1, col=col4)
 }
 
-tikzDevice::tikz(file=paste(plotDIR, "van.tex", sep="/"), height=4, width=6.5, standAlone=F)
+tikz(file=paste(plotDIR, "van.tex", sep="/"), height=4, width=6.5, standAlone=F)
 par(mfrow=c(1,3), mar=c(0.125,0.125,0.125,0.125), mgp=c(1.25,0.125,0))
 yinyang(col1=rgb(0.,0.,0.,1), col2=rgb(1,1,1,1))
 text(-2.5, 0, "$p$", col="yellow", cex=1.25)
@@ -354,6 +432,27 @@ text(3.25, 3., "$p\\&-$", col="yellow", cex=1.25)
 text(-3.125, -3.,"$a\\&+$", cex=1.25)
 text(1.25, 1.25,"$a\\&+$", cex=1.25)
 text(-1.25, -1.25, "$p\\&-$", col="yellow", cex=1.25)
+title(sub="(iii)")
+dev.off()
+
+
+tikz(file=paste(plotDIR, "vanBW.tex", sep="/"), height=4, width=6.5, standAlone=F)
+par(mfrow=c(1,3), mar=c(0.125,0.125,0.125,0.125), mgp=c(1.25,0.125,0))
+yinyang(col1=rgb(0.,0.,0.,1), col2=rgb(1,1,1,1))
+text(-2.5, 0, "$p$", col="white", cex=1.25)
+text(2.5, 0, "$a$", cex=1.25)
+title(sub="(i)")
+yinyang(angle=180, col1=rgb(0.1,0.1,0.1,0.5), col2=rgb(0.8,0.8,0.8, 0.5))
+text(0, 2.5, "$+$", cex=1.25)
+text(0, -2.5, "$-$", cex=1.25)
+title(sub="(ii)")
+yinyang2(col1=rgb(0.,0.,0.,1), col2=rgb(1,1,1,1), col3=rgb(0.1,0.1,0.1,0.5), col4=rgb(0.8,0.8,0.8, 0.5))
+text(-2.5, 1.25, "$p\\&+$", col="white", cex=1.25)
+text(2.5, -1.25, "$a\\&-$", cex=1.25)
+text(3.25, 3., "$p\\&-$", col="white", cex=1.25)
+text(-3.125, -3.,"$a\\&+$", cex=1.25)
+text(1.25, 1.25,"$a\\&+$", cex=1.25)
+text(-1.25, -1.25, "$p\\&-$", col="white", cex=1.25)
 title(sub="(iii)")
 dev.off()
 ```
