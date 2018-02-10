@@ -70,7 +70,7 @@ Or:
 In general, if we want $\Pr(p|+) > \gamma$ and $1 > \gamma > 0.5$, the false positive probability must be:
 
 \[ 
-   \Pr(+|a) < \frac{1-\gamma}{\gamma}  \frac{\Pr(p)}{1-\Pr(p)}(1-\Pr(-|p))
+   \Pr(+|a) < \frac{1}{\gamma}  \frac{\Pr(p)}{1-\Pr(p)}(1-\Pr(-|p))
   \]
 
 We can graphically present the condition:
